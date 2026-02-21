@@ -1,109 +1,45 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Mongo Teacher Management</title>
-  <style>
-    body { font-family: Arial; padding: 30px; }
-    input { padding:8px; margin:5px; }
-    button { padding:8px; cursor:pointer; }
-    table { width:100%; margin-top:20px; border-collapse:collapse; }
-    th, td { border:1px solid #ccc; padding:10px; text-align:center; }
-    th { background:#333; color:white; }
-  </style>
+  <title>Country Finder</title>
 </head>
 <body>
 
-<h2>Mongo Teacher Management</h2>
+<h2>Country Info Finder</h2>
 
-<input type="hidden" id="teacherId">
-<input type="text" id="name" placeholder="Name">
-<input type="text" id="department" placeholder="Department">
-<input type="text" id="subject" placeholder="Subject">
-<button onclick="saveTeacher()">Save</button>
+<input type="text" id="countryInput" placeholder="Enter country name">
+<button onclick="searchCountry()">Search</button>
 
-<table>
-  <thead>
-    <tr>
-      <th>ID</th>
-      <th>Name</th>
-      <th>Department</th>
-      <th>Subject</th>
-      <th>Action</th>
-    </tr>
-  </thead>
-  <tbody id="teacherTable"></tbody>
-</table>
+<h3>Result:</h3>
+<p id="name"></p>
+<p id="capital"></p>
+<p id="population"></p>
+<p id="region"></p>
+<img id="flag" width="150"/>
 
 <script>
-const API_URL = "/teachers";
+async function searchCountry() {
+  const country = document.getElementById("countryInput").value;
 
-async function fetchTeachers() {
-  const res = await fetch(API_URL);
-  const data = await res.json();
+  try {
+    const res = await fetch(`/api/country/${country}`);
+    const data = await res.json();
 
-  const table = document.getElementById("teacherTable");
-  table.innerHTML = "";
+    if (!data.name) {
+      alert("Country not found");
+      return;
+    }
 
-  data.forEach(teacher => {
-    table.innerHTML += `
-      <tr>
-        <td>${teacher._id}</td>
-        <td>${teacher.name}</td>
-        <td>${teacher.department}</td>
-        <td>${teacher.subject}</td>
-        <td>
-          <button onclick="editTeacher('${teacher._id}','${teacher.name}','${teacher.department}','${teacher.subject}')">Edit</button>
-          <button onclick="deleteTeacher('${teacher._id}')">Delete</button>
-        </td>
-      </tr>
-    `;
-  });
-}
+    document.getElementById("name").innerText = "Country: " + data.name;
+    document.getElementById("capital").innerText = "Capital: " + data.capital;
+    document.getElementById("population").innerText = "Population: " + data.population;
+    document.getElementById("region").innerText = "Region: " + data.region;
+    document.getElementById("flag").src = data.flag;
 
-async function saveTeacher() {
-  const id = document.getElementById("teacherId").value;
-  const name = document.getElementById("name").value;
-  const department = document.getElementById("department").value;
-  const subject = document.getElementById("subject").value;
-
-  if (id) {
-    await fetch(`${API_URL}/${id}`, {
-      method: "PUT",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ name, department, subject })
-    });
-  } else {
-    await fetch(API_URL, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ name, department, subject })
-    });
+  } catch (err) {
+    alert("Server Error");
   }
-
-  clearForm();
-  fetchTeachers();
 }
-
-function editTeacher(id, name, department, subject) {
-  document.getElementById("teacherId").value = id;
-  document.getElementById("name").value = name;
-  document.getElementById("department").value = department;
-  document.getElementById("subject").value = subject;
-}
-
-async function deleteTeacher(id) {
-  await fetch(`${API_URL}/${id}`, { method: "DELETE" });
-  fetchTeachers();
-}
-
-function clearForm() {
-  document.getElementById("teacherId").value = "";
-  document.getElementById("name").value = "";
-  document.getElementById("department").value = "";
-  document.getElementById("subject").value = "";
-}
-
-fetchTeachers();
 </script>
 
 </body>

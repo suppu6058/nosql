@@ -1,53 +1,30 @@
-require('dotenv').config();
-const express = require('express');
-const cors = require('cors');
-const mongoose = require('mongoose');
-const Teacher = require('./models/teacher');
+require("dotenv").config();
+const express = require("express");
+const mongoose = require("mongoose");
+const countryRoutes = require("./routes/countryRoutes");
+
+// 👇 STEP 6 – LOGGER HERE
+const winston = require("winston");
+
+const logger = winston.createLogger({
+  transports: [
+    new winston.transports.File({ filename: "logs/error.log" })
+  ]
+});
 
 const app = express();
 
-app.use(cors());
 app.use(express.json());
-app.use(express.static('public'));
+app.use(express.static("public"));
+app.use("/api/country", countryRoutes);
 
-// Connect to MongoDB
-mongoose.connect("mongodb://127.0.0.1:27017/teacherdb")
-.then(() => {
-    console.log("✅ MongoDB Connected");
-    app.listen(3000, () => {
-        console.log("🚀 Server running at http://localhost:3000");
-    });
-})
-.catch(err => {
-    console.log("❌ MongoDB Connection Failed");
+mongoose.connect(process.env.MONGO_URI)
+  .then(() => console.log("MongoDB Connected"))
+  .catch(err => {
     console.log(err);
-});
+    logger.error(err.message);  // 👈 log DB error
+  });
 
-/* CREATE */
-app.post('/teachers', async (req, res) => {
-    try {
-        const teacher = new Teacher(req.body);
-        await teacher.save();
-        res.json({ message: "Teacher Added Successfully" });
-    } catch (err) {
-        res.status(500).json(err);
-    }
-});
-
-/* READ */
-app.get('/teachers', async (req, res) => {
-    const teachers = await Teacher.find().sort({ createdAt: -1 });
-    res.json(teachers);
-});
-
-/* UPDATE */
-app.put('/teachers/:id', async (req, res) => {
-    await Teacher.findByIdAndUpdate(req.params.id, req.body);
-    res.json({ message: "Teacher Updated Successfully" });
-});
-
-/* DELETE */
-app.delete('/teachers/:id', async (req, res) => {
-    await Teacher.findByIdAndDelete(req.params.id);
-    res.json({ message: "Teacher Deleted Successfully" });
+app.listen(process.env.PORT, () => {
+  console.log(`Server running on port ${process.env.PORT}`);
 });
