@@ -1,8 +1,8 @@
 require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
-const mongoose = require('mongoose'); // ✅ add mongoose
-const Student = require('./models/student');
+const mongoose = require('mongoose');
+const Teacher = require('./models/teacher');
 
 const app = express();
 
@@ -10,48 +10,44 @@ app.use(cors());
 app.use(express.json());
 app.use(express.static('public'));
 
-// ✅ CONNECT TO MONGODB
-mongoose.connect("mongodb://127.0.0.1:27017/studentdb", {
-    serverSelectionTimeoutMS: 5000
-})
+// Connect to MongoDB
+mongoose.connect("mongodb://127.0.0.1:27017/teacherdb")
 .then(() => {
     console.log("✅ MongoDB Connected");
-
-    // ✅ START SERVER AFTER DB CONNECTION
-    app.listen(process.env.PORT || 3000, () => {
-        console.log(`🚀 Server running at http://localhost:${process.env.PORT || 3000}`);
+    app.listen(3000, () => {
+        console.log("🚀 Server running at http://localhost:3000");
     });
 })
 .catch(err => {
-    console.error("❌ MongoDB Connection Failed:");
-    console.error(err);
+    console.log("❌ MongoDB Connection Failed");
+    console.log(err);
 });
 
 /* CREATE */
-app.post('/students', async (req, res) => {
-  try {
-    const student = new Student(req.body);
-    await student.save();
-    res.json({ message: "Student Added Successfully" });
-  } catch (err) {
-    res.status(500).json(err);
-  }
+app.post('/teachers', async (req, res) => {
+    try {
+        const teacher = new Teacher(req.body);
+        await teacher.save();
+        res.json({ message: "Teacher Added Successfully" });
+    } catch (err) {
+        res.status(500).json(err);
+    }
 });
 
 /* READ */
-app.get('/students', async (req, res) => {
-  const students = await Student.find().sort({ createdAt: -1 });
-  res.json(students);
+app.get('/teachers', async (req, res) => {
+    const teachers = await Teacher.find().sort({ createdAt: -1 });
+    res.json(teachers);
 });
 
 /* UPDATE */
-app.put('/students/:id', async (req, res) => {
-  await Student.findByIdAndUpdate(req.params.id, req.body);
-  res.json({ message: "Student Updated Successfully" });
+app.put('/teachers/:id', async (req, res) => {
+    await Teacher.findByIdAndUpdate(req.params.id, req.body);
+    res.json({ message: "Teacher Updated Successfully" });
 });
 
 /* DELETE */
-app.delete('/students/:id', async (req, res) => {
-  await Student.findByIdAndDelete(req.params.id);
-  res.json({ message: "Student Deleted Successfully" });
+app.delete('/teachers/:id', async (req, res) => {
+    await Teacher.findByIdAndDelete(req.params.id);
+    res.json({ message: "Teacher Deleted Successfully" });
 });

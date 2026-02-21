@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Mongo Teacher Management</title>
+  <style>
+    body { font-family: Arial; padding: 30px; }
+    input { padding:8px; margin:5px; }
+    button { padding:8px; cursor:pointer; }
+    table { width:100%; margin-top:20px; border-collapse:collapse; }
+    th, td { border:1px solid #ccc; padding:10px; text-align:center; }
+    th { background:#333; color:white; }
+  </style>
+</head>
+<body>
+
+<h2>Mongo Teacher Management</h2>
+
+<input type="hidden" id="teacherId">
+<input type="text" id="name" placeholder="Name">
+<input type="text" id="department" placeholder="Department">
+<input type="text" id="subject" placeholder="Subject">
+<button onclick="saveTeacher()">Save</button>
+
+<table>
+  <thead>
+    <tr>
+      <th>ID</th>
+      <th>Name</th>
+      <th>Department</th>
+      <th>Subject</th>
+      <th>Action</th>
+    </tr>
+  </thead>
+  <tbody id="teacherTable"></tbody>
+</table>
+
+<script>
+const API_URL = "/teachers";
+
+async function fetchTeachers() {
+  const res = await fetch(API_URL);
+  const data = await res.json();
+
+  const table = document.getElementById("teacherTable");
+  table.innerHTML = "";
+
+  data.forEach(teacher => {
+    table.innerHTML += `
+      <tr>
+        <td>${teacher._id}</td>
+        <td>${teacher.name}</td>
+        <td>${teacher.department}</td>
+        <td>${teacher.subject}</td>
+        <td>
+          <button onclick="editTeacher('${teacher._id}','${teacher.name}','${teacher.department}','${teacher.subject}')">Edit</button>
+          <button onclick="deleteTeacher('${teacher._id}')">Delete</button>
+        </td>
+      </tr>
+    `;
+  });
+}
+
+async function saveTeacher() {
+  const id = document.getElementById("teacherId").value;
+  const name = document.getElementById("name").value;
+  const department = document.getElementById("department").value;
+  const subject = document.getElementById("subject").value;
+
+  if (id) {
+    await fetch(`${API_URL}/${id}`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ name, department, subject })
+    });
+  } else {
+    await fetch(API_URL, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ name, department, subject })
+    });
+  }
+
+  clearForm();
+  fetchTeachers();
+}
+
+function editTeacher(id, name, department, subject) {
+  document.getElementById("teacherId").value = id;
+  document.getElementById("name").value = name;
+  document.getElementById("department").value = department;
+  document.getElementById("subject").value = subject;
+}
+
+async function deleteTeacher(id) {
+  await fetch(`${API_URL}/${id}`, { method: "DELETE" });
+  fetchTeachers();
+}
+
+function clearForm() {
+  document.getElementById("teacherId").value = "";
+  document.getElementById("name").value = "";
+  document.getElementById("department").value = "";
+  document.getElementById("subject").value = "";
+}
+
+fetchTeachers();
+</script>
+
+</body>
+</html>
